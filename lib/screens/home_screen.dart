@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:glassmorphism/glassmorphism.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../providers/app_state_provider.dart';
@@ -34,13 +33,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
   late AnimationController _fabAnimationController;
   late AnimationController _headerAnimationController;
-  bool _isDrawerOpen = false;
 
   final List<NavigationItem> _navigationItems = [
     NavigationItem(
@@ -86,12 +83,12 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _headerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _headerAnimationController.forward();
   }
 
@@ -140,7 +137,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           bottomNavigationBar: _buildModernBottomNav(),
           floatingActionButton: _buildFloatingActionButton(),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
           drawer: _buildDrawer(),
         );
       },
@@ -154,26 +152,26 @@ class _HomeScreenState extends State<HomeScreen>
         slivers: [
           // Modern App Bar
           _buildSliverAppBar(),
-          
+
           // Dashboard Content
           SliverToBoxAdapter(
             child: Column(
               children: [
                 // Weather Card
                 _buildWeatherCard(),
-                
+
                 // Quick Stats
                 _buildQuickStats(),
-                
+
                 // Quick Actions Grid
                 _buildQuickActions(),
-                
+
                 // Recent Activity
                 _buildRecentActivity(),
-                
+
                 // Tips & News
                 _buildTipsAndNews(),
-                
+
                 const SizedBox(height: 100), // Space for FAB
               ],
             ),
@@ -257,7 +255,8 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                              borderRadius:
+                                  BorderRadius.circular(AppBorderRadius.lg),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -293,28 +292,23 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildWeatherCard() {
     return Container(
       margin: const EdgeInsets.all(AppSpacing.lg),
-      child: GlassmorphicContainer(
+      child: Container(
         width: double.infinity,
         height: 120,
-        borderRadius: 20,
-        blur: 10,
-        alignment: Alignment.bottomCenter,
-        border: 2,
-        linearGradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.skyBlue.withOpacity(0.2),
-            AppColors.skyBlue.withOpacity(0.1),
-          ],
-        ),
-        borderGradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.skyBlue.withOpacity(0.5),
-            AppColors.skyBlue.withOpacity(0.2),
-          ],
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary.withOpacity(0.1),
+              AppColors.primary.withOpacity(0.05),
+            ],
+          ),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -332,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     Text(
-                      '28°C',
+                      '28ï¿½C',
                       style: AppTextStyles.h1.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
@@ -476,9 +470,9 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     ).animate().scale(
-      delay: Duration(milliseconds: 200),
-      duration: const Duration(milliseconds: 400),
-    );
+          delay: Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 400),
+        );
   }
 
   Widget _buildQuickActions() {
@@ -563,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: actions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final action = entry.value;
-                
+
                 return AnimationConfiguration.staggeredGrid(
                   position: index,
                   duration: const Duration(milliseconds: 600),
@@ -795,7 +789,8 @@ class _HomeScreenState extends State<HomeScreen>
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const FarmingTipsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const FarmingTipsScreen()),
                     );
                   },
                 ),
@@ -810,7 +805,8 @@ class _HomeScreenState extends State<HomeScreen>
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const NewsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const NewsScreen()),
                     );
                   },
                 ),
@@ -892,14 +888,15 @@ class _HomeScreenState extends State<HomeScreen>
           final index = entry.key;
           final item = entry.value;
           final isSelected = _selectedIndex == index;
-          
+
           return _buildNavItem(item, isSelected, () => _onItemTapped(index));
         }).toList(),
       ),
     );
   }
 
-  Widget _buildNavItem(NavigationItem item, bool isSelected, VoidCallback onTap) {
+  Widget _buildNavItem(
+      NavigationItem item, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -946,9 +943,9 @@ class _HomeScreenState extends State<HomeScreen>
         color: Colors.white,
       ),
     ).animate().scale(
-      delay: const Duration(milliseconds: 800),
-      duration: const Duration(milliseconds: 400),
-    );
+          delay: const Duration(milliseconds: 800),
+          duration: const Duration(milliseconds: 400),
+        );
   }
 
   Widget _buildDrawer() {
@@ -1012,7 +1009,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          
+
           // Drawer Items
           Expanded(
             child: ListView(
@@ -1033,7 +1030,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const WeatherScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const WeatherScreen()),
                     );
                   },
                 ),
@@ -1044,7 +1042,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const AnalyticsScreen()),
                     );
                   },
                 ),
@@ -1055,7 +1054,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CommunityScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const CommunityScreen()),
                     );
                   },
                 ),
@@ -1066,7 +1066,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const NewsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const NewsScreen()),
                     );
                   },
                 ),
@@ -1078,7 +1079,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsScreen()),
                     );
                   },
                 ),
@@ -1089,14 +1091,15 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const HelpScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const HelpScreen()),
                     );
                   },
                 ),
               ],
             ),
           ),
-          
+
           // App Version
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1197,7 +1200,8 @@ class _HomeScreenState extends State<HomeScreen>
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const WeatherScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const WeatherScreen()),
                     );
                   },
                 ),
@@ -1375,3 +1379,4 @@ class AnalyticsScreen extends StatelessWidget {
       ),
     );
   }
+}

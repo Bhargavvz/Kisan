@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:glassmorphism/glassmorphism.dart';
 
 import '../providers/app_state_provider.dart';
 import '../utils/app_colors.dart';
@@ -28,10 +27,9 @@ class _LoginScreenState extends State<LoginScreen>
   final _otpController = TextEditingController();
   late AnimationController _backgroundController;
   late AnimationController _formController;
-  
+
   bool _isLoading = false;
   bool _showOTPField = false;
-  bool _isOTPSent = false;
   int _resendCountdown = 0;
 
   @override
@@ -45,12 +43,12 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(seconds: 10),
       vsync: this,
     )..repeat();
-    
+
     _formController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _formController.forward();
   }
 
@@ -93,15 +91,14 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         _showOTPField = true;
-        _isOTPSent = true;
         _resendCountdown = 60;
       });
-      
+
       _startResendTimer();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('OTP sent to +91${_phoneController.text}'),
@@ -145,14 +142,18 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await context.read<AppStateProvider>().login('+91${_phoneController.text}');
-      
+      await context
+          .read<AppStateProvider>()
+          .login('+91${_phoneController.text}');
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const HomeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return SlideTransition(
                 position: animation.drive(
                   Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
@@ -187,7 +188,8 @@ class _LoginScreenState extends State<LoginScreen>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -215,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen>
           children: [
             // Animated background
             _buildAnimatedBackground(),
-            
+
             // Main content
             SafeArea(
               child: SingleChildScrollView(
@@ -224,22 +226,22 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     children: [
                       const SizedBox(height: AppSpacing.xl),
-                      
+
                       // Header
                       _buildHeader(),
-                      
+
                       const SizedBox(height: AppSpacing.xxxl),
-                      
+
                       // Login form
                       _buildLoginForm(),
-                      
+
                       const SizedBox(height: AppSpacing.xl),
-                      
+
                       // Alternative login options
                       _buildAlternativeLogin(),
-                      
+
                       const SizedBox(height: AppSpacing.xl),
-                      
+
                       // Features preview
                       _buildFeaturesPreview(),
                     ],
@@ -264,12 +266,12 @@ class _LoginScreenState extends State<LoginScreen>
               final angle = (index * 45.0) * (math.pi / 180);
               final distance = 200.0 + (index * 50.0);
               final animationOffset = _backgroundController.value * 2 * math.pi;
-              
+
               return Positioned(
-                left: MediaQuery.of(context).size.width / 2 + 
-                      distance * math.cos(angle + animationOffset * 0.5),
-                top: MediaQuery.of(context).size.height / 2 + 
-                     distance * math.sin(angle + animationOffset * 0.3),
+                left: MediaQuery.of(context).size.width / 2 +
+                    distance * math.cos(angle + animationOffset * 0.5),
+                top: MediaQuery.of(context).size.height / 2 +
+                    distance * math.sin(angle + animationOffset * 0.3),
                 child: Container(
                   width: 20 + (index % 3) * 10,
                   height: 20 + (index % 3) * 10,
@@ -314,12 +316,12 @@ class _LoginScreenState extends State<LoginScreen>
             color: Colors.white,
           ),
         ).animate().scale(
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.elasticOut,
-        ),
-        
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+            ),
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         Text(
           context.t('welcome'),
           style: AppTextStyles.h1.copyWith(
@@ -329,9 +331,9 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: const Duration(milliseconds: 300)),
-        
+
         const SizedBox(height: AppSpacing.sm),
-        
+
         Text(
           context.t('welcomeMessage'),
           style: AppTextStyles.bodyLarge.copyWith(
@@ -344,28 +346,23 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginForm() {
-    return GlassmorphicContainer(
+    return Container(
       width: double.infinity,
       height: _showOTPField ? 400 : 300,
-      borderRadius: 20,
-      blur: 10,
-      alignment: Alignment.bottomCenter,
-      border: 2,
-      linearGradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withOpacity(0.1),
-          Colors.white.withOpacity(0.05),
-        ],
-      ),
-      borderGradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withOpacity(0.2),
-          Colors.white.withOpacity(0.1),
-        ],
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 2,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -382,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              
+
               // Phone number field
               CustomTextField(
                 labelText: context.t('phoneNumber'),
@@ -400,12 +397,11 @@ class _LoginScreenState extends State<LoginScreen>
                   Icons.phone,
                   color: Colors.white,
                 ),
-                style: const TextStyle(color: Colors.white),
               ),
-              
+
               if (_showOTPField) ...[
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // OTP field
                 CustomTextField(
                   labelText: 'OTP',
@@ -421,11 +417,10 @@ class _LoginScreenState extends State<LoginScreen>
                     Icons.security,
                     color: Colors.white,
                   ),
-                  style: const TextStyle(color: Colors.white),
                 ),
-                
+
                 const SizedBox(height: AppSpacing.sm),
-                
+
                 // Resend OTP
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -439,11 +434,11 @@ class _LoginScreenState extends State<LoginScreen>
                     TextButton(
                       onPressed: _resendCountdown > 0 ? null : _sendOTP,
                       child: Text(
-                        _resendCountdown > 0 
+                        _resendCountdown > 0
                             ? 'Resend in $_resendCountdown s'
                             : 'Resend OTP',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: _resendCountdown > 0 
+                          color: _resendCountdown > 0
                               ? Colors.white.withOpacity(0.5)
                               : Colors.white,
                           fontWeight: FontWeight.w600,
@@ -453,9 +448,9 @@ class _LoginScreenState extends State<LoginScreen>
                   ],
                 ),
               ],
-              
+
               const SizedBox(height: AppSpacing.lg),
-              
+
               // Action button
               CustomButton(
                 text: _showOTPField ? 'Verify OTP' : 'Send OTP',
@@ -465,9 +460,9 @@ class _LoginScreenState extends State<LoginScreen>
                 textColor: AppColors.primary,
                 icon: _showOTPField ? Icons.verified_user : Icons.send,
               ),
-              
+
               const SizedBox(height: AppSpacing.md),
-              
+
               // Skip button
               Center(
                 child: TextButton(
@@ -486,10 +481,10 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       ),
     ).animate().slideY(
-      begin: 1,
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeOutCubic,
-    );
+          begin: 1,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOutCubic,
+        );
   }
 
   Widget _buildAlternativeLogin() {
@@ -521,7 +516,6 @@ class _LoginScreenState extends State<LoginScreen>
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -584,28 +578,23 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildFeaturesPreview() {
-    return GlassmorphicContainer(
+    return Container(
       width: double.infinity,
       height: 220,
-      borderRadius: 20,
-      blur: 10,
-      alignment: Alignment.bottomCenter,
-      border: 2,
-      linearGradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withOpacity(0.1),
-          Colors.white.withOpacity(0.05),
-        ],
-      ),
-      borderGradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withOpacity(0.2),
-          Colors.white.withOpacity(0.1),
-        ],
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 2,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -620,7 +609,6 @@ class _LoginScreenState extends State<LoginScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
-            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

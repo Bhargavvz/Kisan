@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'providers/app_state_provider.dart';
 import 'providers/localization_provider.dart';
@@ -14,13 +13,13 @@ import 'utils/app_localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -30,7 +29,7 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  
+
   runApp(const MyApp());
 }
 
@@ -98,7 +97,7 @@ class MyApp extends StatelessWidget {
       ),
       fontFamily: localizationProvider.fontFamily,
       scaffoldBackgroundColor: AppColors.background,
-      
+
       // App Bar Theme
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -112,7 +111,7 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
         ),
       ),
-      
+
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -130,7 +129,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      
+
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -141,7 +140,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      
+
       // Outlined Button Theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -153,7 +152,7 @@ class MyApp extends StatelessWidget {
           minimumSize: const Size(double.infinity, 48),
         ),
       ),
-      
+
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -183,9 +182,9 @@ class MyApp extends StatelessWidget {
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
       ),
-      
+
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(
@@ -193,7 +192,7 @@ class MyApp extends StatelessWidget {
         ),
         color: Colors.white,
       ),
-      
+
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
@@ -202,15 +201,15 @@ class MyApp extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      
+
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         elevation: 8,
       ),
-      
+
       // Snack Bar Theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimary,
@@ -232,7 +231,7 @@ class MyApp extends StatelessWidget {
       ),
       fontFamily: localizationProvider.fontFamily,
       scaffoldBackgroundColor: const Color(0xFF121212),
-      
+
       // App Bar Theme
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1F1F1F),
@@ -241,9 +240,9 @@ class MyApp extends StatelessWidget {
         systemOverlayStyle: SystemUiOverlayStyle.light,
         centerTitle: true,
       ),
-      
+
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.3),
         shape: RoundedRectangleBorder(
@@ -251,7 +250,7 @@ class MyApp extends StatelessWidget {
         ),
         color: const Color(0xFF1F1F1F),
       ),
-      
+
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFF1F1F1F),

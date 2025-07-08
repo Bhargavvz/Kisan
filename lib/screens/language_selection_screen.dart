@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../providers/localization_provider.dart';
 import '../utils/app_colors.dart';
@@ -18,7 +16,8 @@ class LanguageSelectionScreen extends StatefulWidget {
   });
 
   @override
-  State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
+  State<LanguageSelectionScreen> createState() =>
+      _LanguageSelectionScreenState();
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
@@ -156,7 +155,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
     // Set initial selected language
     final currentLocale = context.read<LocalizationProvider>().locale;
     selectedLanguage = currentLocale.languageCode;
-    selectedIndex = languages.indexWhere((lang) => lang.code == selectedLanguage);
+    selectedIndex =
+        languages.indexWhere((lang) => lang.code == selectedLanguage);
 
     _animationController.forward();
   }
@@ -194,7 +194,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const OnboardingScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
             transitionDuration: const Duration(milliseconds: 500),
@@ -287,9 +288,9 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
               color: Colors.white,
             ),
           ).animate().scale(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.elasticOut,
-          ),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.elasticOut,
+              ),
 
           const SizedBox(height: 24),
 
@@ -361,30 +362,18 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
   }
 
   Widget _buildLanguageGrid() {
-    return AnimationLimiter(
-      child: GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.1,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: languages.length,
-        itemBuilder: (context, index) {
-          return AnimationConfiguration.staggeredGrid(
-            position: index,
-            duration: const Duration(milliseconds: 600),
-            columnCount: 2,
-            child: SlideAnimation(
-              verticalOffset: 50.0,
-              child: FadeInAnimation(
-                child: _buildLanguageCard(languages[index], index),
-              ),
-            ),
-          );
-        },
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.1,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
       ),
+      itemCount: languages.length,
+      itemBuilder: (context, index) {
+        return _buildLanguageCard(languages[index], index);
+      },
     );
   }
 
@@ -478,8 +467,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                   Text(
                     language.name,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color:
-                          isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
@@ -554,9 +542,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                 ],
               ),
               child: ElevatedButton(
-                onPressed: selectedLanguage != null
-                    ? _continueWithLanguage
-                    : null,
+                onPressed:
+                    selectedLanguage != null ? _continueWithLanguage : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -585,9 +572,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
           Text(
             'You can change this later in settings',
             style: AppTextStyles.bodySmall.copyWith(
