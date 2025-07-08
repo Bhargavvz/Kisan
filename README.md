@@ -2,38 +2,6 @@
 
 A comprehensive Flutter app designed to empower farmers with digital tools for crop management, market insights, and access to government subsidies.
 
-## 🔥 Firebase Integration
-
-Project Kisan now uses Firebase as its backend to provide real-time data, authentication, and robust offline capabilities.
-
-### Firebase Setup Instructions
-
-1. **Create Firebase Project**
-   - Visit the [Firebase Console](https://console.firebase.google.com/)
-   - Click "Add project" and follow the setup wizard
-   - Enable Google Analytics (recommended)
-
-2. **Configure Firebase in the app**
-   - Download the `google-services.json` (Android) or `GoogleService-Info.plist` (iOS) 
-   - Place these files in the appropriate directories:
-     - Android: `android/app/`
-     - iOS: Root of the iOS project
-
-3. **Enable Required Firebase Services**
-   - Authentication: Enable Phone Authentication
-   - Firestore Database: Create database in production mode
-   - Storage: Set up storage rules
-   - Remote Config: Configure feature flags
-   - Crashlytics: Enable crash reporting
-
-4. **Initialize Firebase Collections**
-   - The app expects certain Firestore collections to be present
-   - See `docs/firebase_schema.md` for the detailed schema
-
-5. **Run the Test Suite**
-   - Execute `run_firebase_tests.bat` (Windows) or manually run the tests
-   - This will verify your Firebase setup is working correctly
-
 ## 🌱 Features
 
 ### Core Functionality
@@ -299,3 +267,149 @@ For support, email bhargavadepu@outlook.com or create an issue in the GitHub rep
 ---
 
 **Project Kisan** - Empowering farmers through digital innovation 🌾
+
+## 🔥 Firebase Integration
+
+This app uses Firebase as the backend for authentication, data storage, and analytics. Below are the key Firebase services used:
+
+### Firebase Authentication
+- **Phone Authentication**: For farmer registration and login using mobile numbers
+- **Anonymous Login**: For guest access to limited features
+
+### Cloud Firestore
+The database is structured with the following collections:
+
+- **users**: User profile information
+  - User ID (document ID)
+  - name, phoneNumber, email, address
+  - preferences (language, theme, notifications)
+  - createdAt, lastLoginAt
+
+- **crop_diagnoses**: Crop disease diagnoses
+  - Diagnosis ID (document ID)
+  - userId, cropType, description, imageUrl, location
+  - status (pending, processing, completed, failed, healthy)
+  - submittedAt, completedAt
+  - diagnosisResult (nested object with disease details)
+
+- **crop_prices**: Market prices for various crops
+  - Price ID (document ID) 
+  - cropName, category, currentPrice, previousPrice, unit
+  - marketName, location, lastUpdated
+  - imageUrl, description
+
+- **subsidies**: Government subsidy schemes
+  - Subsidy ID (document ID)
+  - schemeName, description, category, maxAmount
+  - eligibilityCriteria, requiredDocuments
+  - applicationProcess, deadline, department
+  - contactNumber, website, isActive
+
+### Firebase Storage
+Used for storing:
+- User profile images
+- Crop disease diagnosis images
+
+### Firebase Analytics
+Tracks key user events:
+- App opens and session duration
+- Feature usage (diagnosis, market price checks, subsidy views)
+- User engagement metrics
+
+## 🔧 Firebase Setup Instructions
+
+### Step 1: Create a Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Add project" and follow the setup wizard
+3. Enable Google Analytics for your project when prompted
+
+### Step 2: Add Your App to Firebase
+#### For Android:
+1. In Firebase Console, click "Add app" and select Android
+2. Enter your app's package name: `com.example.project_kisan` (update with your actual package name)
+3. Download the `google-services.json` file
+4. Place it in the `android/app` directory
+
+#### For iOS:
+1. In Firebase Console, click "Add app" and select iOS
+2. Enter your bundle ID
+3. Download the `GoogleService-Info.plist` file
+4. Place it in the `ios/Runner` directory using Xcode
+
+### Step 3: Configure Firebase Services
+1. **Authentication**:
+   - Go to Authentication in Firebase Console
+   - Enable Phone Authentication method
+   - Add test phone numbers if needed for development
+
+2. **Firestore Database**:
+   - Go to Firestore Database in Firebase Console
+   - Create database (start in test mode for development)
+   - Set up the following collections:
+     - users
+     - crop_diagnoses
+     - crop_prices
+     - subsidies
+
+3. **Storage**:
+   - Go to Storage in Firebase Console
+   - Set up storage rules for user uploads
+
+### Step 4: Update Your App Configuration
+1. Ensure you've added the required Firebase dependencies in `pubspec.yaml`
+2. Initialize Firebase in your app's `main.dart` file
+3. Run `flutter pub get` to install dependencies
+
+## 🔒 Security Rules
+
+### Firestore Security Rules
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profiles - users can only read and write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Crop diagnoses - users can read and create their own diagnoses
+    match /crop_diagnoses/{diagnosisId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+                             resource.data.userId == request.auth.uid;
+    }
+    
+    // Crop prices - readable by all authenticated users, writable by admins only
+    match /crop_prices/{priceId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Restrict writes to admin via Cloud Functions
+    }
+    
+    // Government subsidies - readable by all authenticated users
+    match /subsidies/{subsidyId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Restrict writes to admin via Cloud Functions
+    }
+  }
+}
+```
+
+### Storage Rules
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /user_images/{userId}/{allImages=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /crop_images/{userId}/{allImages=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
