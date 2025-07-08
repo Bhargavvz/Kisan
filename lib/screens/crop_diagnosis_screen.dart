@@ -10,6 +10,7 @@ import '../services/crop_diagnosis_service.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/common_widgets.dart';
+import '../utils/deprecation_fixes.dart';
 
 class CropDiagnosisScreen extends StatefulWidget {
   const CropDiagnosisScreen({super.key});
@@ -34,7 +35,10 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
 
   void _loadDiagnosisHistory() async {
     try {
-      final history = await _diagnosisService.getUserDiagnoses();
+      // In a real app, you would get the current user ID from auth service
+      // For now, use a mock user ID
+      const String mockUserId = 'mock_user_id';
+      final history = await _diagnosisService.getUserDiagnoses(mockUserId);
       setState(() {
         _diagnosisHistory = history;
       });
@@ -55,7 +59,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
         maxHeight: 600,
       );
 
-      if (image != null) {
+      if (image != null && mounted) {
         setState(() {
           _selectedImage = File(image.path);
           _diagnosis = null;
@@ -63,6 +67,8 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
         _diagnosePlant();
       }
     } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error picking image: ${e.toString()}'),
@@ -82,6 +88,8 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 3));
+
+      if (!mounted) return;
 
       // Mock diagnosis result
       final mockDiagnosis = CropDiagnosis(
@@ -115,11 +123,15 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
         ),
       );
 
+      if (!mounted) return;
+
       setState(() {
         _diagnosis = mockDiagnosis;
         _diagnosisHistory.insert(0, mockDiagnosis);
       });
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Diagnosis failed: ${e.toString()}'),
@@ -209,7 +221,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withOpacitySafe(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -399,8 +411,8 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 height: 50,
                 decoration: BoxDecoration(
                   color: diagnosis.isHealthy
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors.error.withOpacity(0.1),
+                      ? AppColors.success.withOpacitySafe(0.1)
+                      : AppColors.error.withOpacitySafe(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -440,7 +452,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withOpacitySafe(0.1),
                     borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                   ),
                   child: Text(

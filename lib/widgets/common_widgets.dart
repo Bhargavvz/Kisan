@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
+import '../widgets/custom_button.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
@@ -207,6 +208,51 @@ class EmptyStateWidget extends StatelessWidget {
                 child: Text(actionText!),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ErrorStateWidget extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final IconData icon;
+
+  const ErrorStateWidget({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    this.icon = Icons.error_outline,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 70,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              message,
+              style: AppTextStyles.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            CustomButton(
+              onPressed: onRetry,
+              text: 'Retry',
+              icon: Icons.refresh,
+              isOutlined: true,
+            ),
           ],
         ),
       ),

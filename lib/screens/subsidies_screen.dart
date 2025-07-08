@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
-import '../utils/mock_data.dart';
 import '../models/government_subsidy.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/common_widgets.dart';
+import '../services/government_subsidies_service.dart';
+import '../utils/deprecation_fixes.dart';
 
 class SubsidiesScreen extends StatefulWidget {
   const SubsidiesScreen({super.key});
@@ -18,6 +19,9 @@ class SubsidiesScreen extends StatefulWidget {
 class _SubsidiesScreenState extends State<SubsidiesScreen> {
   List<GovernmentSubsidy> _subsidies = [];
   bool _isLoading = false;
+  Stream<List<GovernmentSubsidy>>? _subsidiesStream;
+  final GovernmentSubsidiesService _subsidiesService =
+      GovernmentSubsidiesService();
 
   @override
   void initState() {
@@ -28,16 +32,7 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
   void _loadSubsidies() {
     setState(() {
       _isLoading = true;
-    });
-
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _subsidies = MockData.getGovernmentSubsidies();
-          _isLoading = false;
-        });
-      }
+      _subsidiesStream = _subsidiesService.getSubsidies();
     });
   }
 
@@ -94,29 +89,48 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
               ),
             ),
           ),
-          
+
           // Subsidies list
           Expanded(
-            child: _isLoading
-                ? const LoadingWidget(message: 'Loading subsidies...')
-                : _subsidies.isEmpty
-                    ? EmptyStateWidget(
-                        title: 'No subsidies available',
-                        description: 'Check back later for new schemes',
-                        icon: Icons.account_balance,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          _loadSubsidies();
-                        },
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          itemCount: _subsidies.length,
-                          itemBuilder: (context, index) {
-                            return _buildSubsidyCard(_subsidies[index]);
-                          },
-                        ),
-                      ),
+            child: StreamBuilder<List<GovernmentSubsidy>>(
+              stream: _subsidiesStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    _isLoading) {
+                  return const LoadingWidget(message: 'Loading subsidies...');
+                }
+
+                if (snapshot.hasError) {
+                  return ErrorStateWidget(
+                    message: 'Failed to load subsidies: ${snapshot.error}',
+                    onRetry: _loadSubsidies,
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return EmptyStateWidget(
+                    title: 'No subsidies available',
+                    description: 'Check back later for new schemes',
+                    icon: Icons.account_balance,
+                  );
+                }
+
+                _subsidies = snapshot.data!;
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _loadSubsidies();
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    itemCount: _subsidies.length,
+                    itemBuilder: (context, index) {
+                      return _buildSubsidyCard(_subsidies[index]);
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -154,7 +168,7 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
             Expanded(
               child: _buildInfoItem(
                 'Max Amount',
-                subsidy.maxAmount > 0 
+                subsidy.maxAmount > 0
                     ? '₹${subsidy.maxAmount.toStringAsFixed(0)}'
                     : 'N/A',
                 Icons.currency_rupee,
@@ -163,7 +177,7 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        
+
         Row(
           children: [
             Expanded(
@@ -179,18 +193,18 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
                 'Deadline',
                 '${subsidy.deadline.day}/${subsidy.deadline.month}/${subsidy.deadline.year}',
                 Icons.calendar_today,
-                textColor: subsidy.isDeadlineNear 
-                    ? AppColors.warning 
-                    : subsidy.isExpired 
-                        ? AppColors.error 
+                textColor: subsidy.isDeadlineNear
+                    ? AppColors.warning
+                    : subsidy.isExpired
+                        ? AppColors.error
                         : null,
               ),
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Eligibility criteria
         Text(
           context.t('eligibilityCriteria'),
@@ -200,30 +214,30 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         ...subsidy.eligibilityCriteria.map((criteria) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.check_circle,
-                size: 16,
-                color: AppColors.success,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  criteria,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: AppColors.success,
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      criteria,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        )),
-        
+            )),
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Required documents
         Text(
           'Required Documents',
@@ -233,30 +247,30 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         ...subsidy.requiredDocuments.map((document) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.description,
-                size: 16,
-                color: AppColors.info,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  document,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.description,
+                    size: 16,
+                    color: AppColors.info,
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      document,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        )),
-        
+            )),
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Application process
         Text(
           context.t('howToApply'),
@@ -271,9 +285,9 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
             color: AppColors.textSecondary,
           ),
         ),
-        
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Contact information
         if (subsidy.contactNumber != null || subsidy.website != null) ...[
           Text(
@@ -283,7 +297,6 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          
           if (subsidy.contactNumber != null)
             Row(
               children: [
@@ -301,7 +314,6 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
                 ),
               ],
             ),
-          
           if (subsidy.website != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Row(
@@ -324,24 +336,22 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
               ],
             ),
           ],
-          
           const SizedBox(height: AppSpacing.lg),
         ],
-        
+
         // Apply button
         Row(
           children: [
             Expanded(
               child: CustomButton(
                 text: context.t('apply'),
-                onPressed: subsidy.isExpired 
-                    ? null 
+                onPressed: subsidy.isExpired
+                    ? null
                     : () {
                         _showApplicationDialog(subsidy);
                       },
-                backgroundColor: subsidy.isExpired 
-                    ? AppColors.textLight 
-                    : AppColors.primary,
+                backgroundColor:
+                    subsidy.isExpired ? AppColors.textLight : AppColors.primary,
                 icon: Icons.open_in_new,
               ),
             ),
@@ -353,7 +363,8 @@ class _SubsidiesScreenState extends State<SubsidiesScreen> {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
+                  color: AppColors.warning.withAlpha(
+                      26), // Changed from withOpacity(0.1) to withAlpha(26)
                   borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                 ),
                 child: Row(

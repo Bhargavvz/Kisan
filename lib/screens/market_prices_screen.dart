@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
-import '../utils/mock_data.dart';
 import '../models/crop_price.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/common_widgets.dart';
+import '../services/market_prices_service.dart';
+import '../utils/deprecation_fixes.dart';
 
 class MarketPricesScreen extends StatefulWidget {
   const MarketPricesScreen({super.key});
@@ -20,6 +21,8 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
   bool _isLoading = false;
+  Stream<List<CropPrice>>? _pricesStream;
+  final MarketPricesService _marketPricesService = MarketPricesService();
 
   final List<String> _categories = [
     'All',
@@ -37,27 +40,17 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
   void _loadCropPrices() {
     setState(() {
       _isLoading = true;
-    });
-
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _cropPrices = MockData.getCropPrices();
-          _filteredPrices = _cropPrices;
-          _isLoading = false;
-        });
-      }
+      _pricesStream = _marketPricesService.getMarketPrices();
     });
   }
 
   void _filterPrices() {
     setState(() {
       _filteredPrices = _cropPrices.where((price) {
-        final categoryMatch = _selectedCategory == 'All' || 
-                             price.category == _selectedCategory;
+        final categoryMatch =
+            _selectedCategory == 'All' || price.category == _selectedCategory;
         final searchMatch = _searchQuery.isEmpty ||
-                           price.cropName.toLowerCase().contains(_searchQuery.toLowerCase());
+            price.cropName.toLowerCase().contains(_searchQuery.toLowerCase());
         return categoryMatch && searchMatch;
       }).toList();
     });
@@ -134,7 +127,7 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  
+
                   // Category filter
                   Row(
                     children: [
@@ -153,10 +146,13 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                             children: _categories.map((category) {
                               final isSelected = _selectedCategory == category;
                               return Container(
-                                margin: const EdgeInsets.only(right: AppSpacing.sm),
+                                margin:
+                                    const EdgeInsets.only(right: AppSpacing.sm),
                                 child: FilterChip(
                                   label: Text(
-                                    category == 'All' ? context.t('allCrops') : context.t(category.toLowerCase()),
+                                    category == 'All'
+                                        ? context.t('allCrops')
+                                        : context.t(category.toLowerCase()),
                                   ),
                                   selected: isSelected,
                                   onSelected: (selected) {
@@ -164,7 +160,8 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                                       _onCategoryChanged(category);
                                     }
                                   },
-                                  selectedColor: AppColors.primary.withOpacity(0.2),
+                                  selectedColor:
+                                      AppColors.primary.withOpacitySafe(0.2),
                                   checkmarkColor: AppColors.primary,
                                 ),
                               );
@@ -178,29 +175,68 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
               ),
             ),
           ),
-          
+
           // Price list
           Expanded(
-            child: _isLoading
-                ? const LoadingWidget(message: 'Loading market prices...')
-                : _filteredPrices.isEmpty
-                    ? EmptyStateWidget(
-                        title: context.t('noResultsFound'),
-                        description: 'Try adjusting your search or filter criteria',
-                        icon: Icons.search_off,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          _loadCropPrices();
-                        },
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          itemCount: _filteredPrices.length,
-                          itemBuilder: (context, index) {
-                            return _buildPriceCard(_filteredPrices[index]);
-                          },
-                        ),
-                      ),
+            child: StreamBuilder<List<CropPrice>>(
+              stream: _pricesStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    _isLoading) {
+                  return const LoadingWidget(
+                      message: 'Loading market prices...');
+                }
+
+                if (snapshot.hasError) {
+                  return ErrorStateWidget(
+                    message: 'Failed to load market prices: ${snapshot.error}',
+                    onRetry: _loadCropPrices,
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return EmptyStateWidget(
+                    title: context.t('noResultsFound'),
+                    description: 'No market prices available at the moment',
+                    icon: Icons.search_off,
+                  );
+                }
+
+                _cropPrices = snapshot.data!;
+
+                // Apply filters
+                _filteredPrices = _cropPrices.where((price) {
+                  final categoryMatch = _selectedCategory == 'All' ||
+                      price.category == _selectedCategory;
+                  final searchMatch = _searchQuery.isEmpty ||
+                      price.cropName
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase());
+                  return categoryMatch && searchMatch;
+                }).toList();
+
+                if (_filteredPrices.isEmpty) {
+                  return EmptyStateWidget(
+                    title: context.t('noResultsFound'),
+                    description: 'Try adjusting your search or filter criteria',
+                    icon: Icons.search_off,
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _loadCropPrices();
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    itemCount: _filteredPrices.length,
+                    itemBuilder: (context, index) {
+                      return _buildPriceCard(_filteredPrices[index]);
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -218,7 +254,7 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withOpacitySafe(0.1),
                 borderRadius: BorderRadius.circular(AppBorderRadius.sm),
               ),
               child: Icon(
@@ -228,7 +264,7 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            
+
             // Crop details
             Expanded(
               child: Column(
@@ -257,8 +293,10 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _getCategoryColor(price.category).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                          color: _getCategoryColor(price.category)
+                              .withOpacitySafe(0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppBorderRadius.sm),
                         ),
                         child: Text(
                           price.category,
@@ -280,7 +318,7 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                 ],
               ),
             ),
-            
+
             // Price details
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -298,7 +336,7 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                
+
                 // Price change indicator
                 if (price.previousPrice != null)
                   Container(
@@ -308,10 +346,10 @@ class _MarketPricesScreenState extends State<MarketPricesScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: price.isPriceUp
-                          ? AppColors.success.withOpacity(0.1)
+                          ? AppColors.success.withOpacitySafe(0.1)
                           : price.isPriceDown
-                              ? AppColors.error.withOpacity(0.1)
-                              : AppColors.textLight.withOpacity(0.1),
+                              ? AppColors.error.withOpacitySafe(0.1)
+                              : AppColors.textLight.withOpacitySafe(0.1),
                       borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                     ),
                     child: Row(

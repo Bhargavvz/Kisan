@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
+import '../utils/deprecation_fixes.dart';
 import '../utils/mock_data.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_button.dart';
@@ -14,7 +15,7 @@ class HelpScreen extends StatefulWidget {
   State<HelpScreen> createState() => _HelpScreenState();
 }
 
-class _HelpScreenState extends State<HelpScreen> 
+class _HelpScreenState extends State<HelpScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _issueController = TextEditingController();
@@ -68,7 +69,7 @@ class _HelpScreenState extends State<HelpScreen>
 
   Widget _buildFAQTab() {
     final faqs = MockData.getFAQs();
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: faqs.length,
@@ -105,7 +106,7 @@ class _HelpScreenState extends State<HelpScreen>
 
   Widget _buildTutorialsTab() {
     final tutorials = MockData.getTutorials();
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: tutorials.length,
@@ -128,7 +129,7 @@ class _HelpScreenState extends State<HelpScreen>
                   width: 80,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withOpacitySafe(0.1),
                     borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                   ),
                   child: const Icon(
@@ -203,7 +204,7 @@ class _HelpScreenState extends State<HelpScreen>
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          
+
           CustomCard(
             child: Column(
               children: [
@@ -230,9 +231,9 @@ class _HelpScreenState extends State<HelpScreen>
               ],
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.lg),
-          
+
           // Report issue form
           Text(
             context.t('reportIssue'),
@@ -241,7 +242,7 @@ class _HelpScreenState extends State<HelpScreen>
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          
+
           CustomCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,14 +254,12 @@ class _HelpScreenState extends State<HelpScreen>
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
                 CustomTextField(
                   controller: _issueController,
                   hintText: 'Please describe your issue in detail...',
                   maxLines: 5,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
                 CustomButton(
                   text: 'Submit Report',
                   onPressed: () {
@@ -279,9 +278,9 @@ class _HelpScreenState extends State<HelpScreen>
               ],
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.lg),
-          
+
           // App information
           Text(
             'App Information',
@@ -290,7 +289,7 @@ class _HelpScreenState extends State<HelpScreen>
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          
+
           CustomCard(
             child: Column(
               children: [
@@ -323,7 +322,7 @@ class _HelpScreenState extends State<HelpScreen>
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withOpacitySafe(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

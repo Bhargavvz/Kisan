@@ -3,14 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../providers/app_state_provider.dart';
-import '../providers/localization_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
-import '../utils/mock_data.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart' as app_user;
 import '../widgets/custom_card.dart';
 import '../widgets/common_widgets.dart';
 import 'crop_diagnosis_screen.dart';
@@ -20,11 +19,7 @@ import 'profile_screen.dart';
 import 'help_screen.dart';
 import 'settings_screen.dart';
 import 'offline_screen.dart';
-import 'weather_screen.dart';
-import 'farming_tips_screen.dart';
-import 'community_screen.dart';
-import 'news_screen.dart';
-import 'analytics_screen.dart';
+import '../utils/deprecation_fixes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -236,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Text(
                             _getGreeting(),
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withOpacitySafe(0.9),
                             ),
                           ),
                           Text(
@@ -254,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               vertical: AppSpacing.xs,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withOpacitySafe(0.2),
                               borderRadius:
                                   BorderRadius.circular(AppBorderRadius.lg),
                             ),
@@ -301,12 +296,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.primary.withOpacity(0.1),
-              AppColors.primary.withOpacity(0.05),
+              AppColors.primary.withOpacitySafe(0.1),
+              AppColors.primary.withOpacitySafe(0.05),
             ],
           ),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withOpacitySafe(0.2),
             width: 1,
           ),
         ),
@@ -411,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withOpacitySafe(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -426,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withOpacitySafe(0.1),
                   borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                 ),
                 child: Icon(
@@ -585,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: action.color.withOpacity(0.1),
+            color: action.color.withOpacitySafe(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -601,7 +596,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: action.color.withOpacity(0.1),
+                color: action.color.withOpacitySafe(0.1),
                 borderRadius: BorderRadius.circular(AppBorderRadius.md),
               ),
               child: Icon(
@@ -714,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: 45,
             height: 45,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withOpacitySafe(0.1),
               borderRadius: BorderRadius.circular(AppBorderRadius.md),
             ),
             child: Icon(
@@ -828,10 +823,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacitySafe(0.1),
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withOpacitySafe(0.2),
           width: 1,
         ),
       ),
@@ -876,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(AppBorderRadius.xl),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacitySafe(0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -906,7 +901,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? item.color.withOpacity(0.1) : Colors.transparent,
+          color:
+              isSelected ? item.color.withOpacitySafe(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         ),
         child: Column(
@@ -997,7 +993,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Text(
                               user?.email ?? 'guest@projectkisan.com',
                               style: AppTextStyles.bodyMedium.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withOpacitySafe(0.9),
                               ),
                             ),
                           ],
@@ -1229,7 +1225,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withOpacitySafe(0.1),
               borderRadius: BorderRadius.circular(AppBorderRadius.md),
             ),
             child: Icon(

@@ -1,7 +1,7 @@
 import '../models/crop_price.dart';
 import '../models/crop_diagnosis.dart';
 import '../models/government_subsidy.dart';
-import '../models/user.dart';
+import '../models/user.dart' as app_user;
 
 class MockData {
   static List<CropPrice> getCropPrices() {
@@ -278,8 +278,8 @@ class MockData {
     ];
   }
 
-  static User getMockUser() {
-    return User(
+  static app_user.User getMockUser() {
+    return app_user.User(
       id: '1',
       name: 'Ramesh Kumar',
       email: 'ramesh.kumar@example.com',
@@ -287,6 +287,15 @@ class MockData {
       address: 'Village Kadakol, Hubli, Karnataka 580024',
       language: 'kn',
       profileImageUrl: 'assets/images/user_avatar.jpg',
+      isGuest: false,
+      createdAt: DateTime.now(),
+      lastLoginAt: DateTime.now(),
+      preferences: app_user.UserPreferences(
+        language: 'kn',
+        theme: 'system',
+        notifications: true,
+        locationAccess: false,
+      ),
     );
   }
 

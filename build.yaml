@@ -1,0 +1,31 @@
+targets:
+  $default:
+    builders:
+      # Configure the built_value code generator
+      built_value_generator|built_value:
+        enabled: true
+      
+      # Configure any other builders
+      json_serializable:
+        options:
+          # Options for the json_serializable builder
+          any_map: false
+          checked: false
+          create_factory: true
+          create_to_json: true
+          disallow_unrecognized_keys: false
+          explicit_to_json: true
+          field_rename: none
+          ignore_unannotated: false
+          include_if_null: true
+          
+      # Configure the analyzer
+      analyzer:
+        strong-mode:
+          implicit-casts: false
+          implicit-dynamic: false
+        exclude:
+          - lib/generated/**
+          - lib/**.g.dart
+        errors:
+          invalid_annotation_target: ignore

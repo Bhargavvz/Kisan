@@ -6,6 +6,7 @@ import '../providers/localization_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import 'onboarding_screen.dart';
+import '../utils/deprecation_fixes.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   final bool isFromSettings;
@@ -272,11 +273,11 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
             height: 120,
             width: 120,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withOpacitySafe(0.1),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withOpacitySafe(0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -308,7 +309,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
           Text(
             'Choose your preferred language',
             style: AppTextStyles.bodyLarge.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withOpacitySafe(0.9),
             ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: const Duration(milliseconds: 500)),
@@ -325,7 +326,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withOpacitySafe(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -396,14 +397,14 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: language.gradient.colors.first.withOpacity(0.3),
+                    color: language.gradient.colors.first.withOpacitySafe(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
                 ]
               : [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withOpacitySafe(0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -442,12 +443,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                     height: 50,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.2)
+                          ? Colors.white.withOpacitySafe(0.2)
                           : Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacitySafe(0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -480,7 +481,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                     language.nativeName,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.9)
+                          ? Colors.white.withOpacitySafe(0.9)
                           : AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
@@ -535,7 +536,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withOpacitySafe(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),

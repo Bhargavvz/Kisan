@@ -2,6 +2,38 @@
 
 A comprehensive Flutter app designed to empower farmers with digital tools for crop management, market insights, and access to government subsidies.
 
+## 🔥 Firebase Integration
+
+Project Kisan now uses Firebase as its backend to provide real-time data, authentication, and robust offline capabilities.
+
+### Firebase Setup Instructions
+
+1. **Create Firebase Project**
+   - Visit the [Firebase Console](https://console.firebase.google.com/)
+   - Click "Add project" and follow the setup wizard
+   - Enable Google Analytics (recommended)
+
+2. **Configure Firebase in the app**
+   - Download the `google-services.json` (Android) or `GoogleService-Info.plist` (iOS) 
+   - Place these files in the appropriate directories:
+     - Android: `android/app/`
+     - iOS: Root of the iOS project
+
+3. **Enable Required Firebase Services**
+   - Authentication: Enable Phone Authentication
+   - Firestore Database: Create database in production mode
+   - Storage: Set up storage rules
+   - Remote Config: Configure feature flags
+   - Crashlytics: Enable crash reporting
+
+4. **Initialize Firebase Collections**
+   - The app expects certain Firestore collections to be present
+   - See `docs/firebase_schema.md` for the detailed schema
+
+5. **Run the Test Suite**
+   - Execute `run_firebase_tests.bat` (Windows) or manually run the tests
+   - This will verify your Firebase setup is working correctly
+
 ## 🌱 Features
 
 ### Core Functionality
@@ -20,7 +52,7 @@ A comprehensive Flutter app designed to empower farmers with digital tools for c
 ### Technical Features
 - **Clean Architecture**: Organized codebase with proper separation of concerns
 - **State Management**: Provider pattern for efficient state handling
-- **Local Storage**: Persistent data storage for user preferences
+- **Firebase Integration**: Real-time data, authentication, and offline capabilities
 - **Mock Data**: Comprehensive mock data for development and testing
 
 ## 🏗️ Architecture
@@ -98,6 +130,7 @@ lib/
 - Dart SDK
 - Android Studio / VS Code
 - Android SDK / Xcode (for iOS)
+- Firebase project with Firestore database and Firebase Authentication set up
 
 ### Installation
 

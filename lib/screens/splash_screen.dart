@@ -14,6 +14,7 @@ import 'language_selection_screen.dart';
 import 'onboarding_screen.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
+import '../utils/deprecation_fixes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -45,12 +46,12 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
+
     _textAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _backgroundAnimationController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
@@ -91,11 +92,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _startAnimations() {
     _backgroundAnimationController.forward();
-    
+
     Future.delayed(const Duration(milliseconds: 300), () {
       _logoAnimationController.forward();
     });
-    
+
     Future.delayed(const Duration(milliseconds: 800), () {
       _textAnimationController.forward();
     });
@@ -103,16 +104,16 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _checkInitialRoute() async {
     await Future.delayed(const Duration(milliseconds: 3000));
-    
+
     if (!mounted) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     final isFirstTime = prefs.getBool('is_first_time') ?? true;
     final hasSelectedLanguage = prefs.getString('language') != null;
     final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-    
+
     Widget nextScreen;
-    
+
     if (isFirstTime || !hasSelectedLanguage) {
       nextScreen = const LanguageSelectionScreen();
     } else if (!isLoggedIn) {
@@ -120,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       nextScreen = const HomeScreen();
     }
-    
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
@@ -163,7 +164,7 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             // Animated background particles
             _buildAnimatedBackground(),
-            
+
             // Main content
             Center(
               child: Column(
@@ -171,20 +172,20 @@ class _SplashScreenState extends State<SplashScreen>
                 children: [
                   // Animated logo
                   _buildAnimatedLogo(),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Animated text
                   _buildAnimatedText(),
-                  
+
                   const SizedBox(height: 60),
-                  
+
                   // Loading indicator
                   _buildLoadingIndicator(),
                 ],
               ),
             ),
-            
+
             // Bottom branding
             _buildBottomBranding(),
           ],
@@ -201,18 +202,19 @@ class _SplashScreenState extends State<SplashScreen>
           children: List.generate(20, (index) {
             final angle = (index * 18.0) * (math.pi / 180);
             final distance = 100.0 + (index * 30.0);
-            final animationOffset = _backgroundAnimationController.value * 2 * math.pi;
-            
+            final animationOffset =
+                _backgroundAnimationController.value * 2 * math.pi;
+
             return Positioned(
-              left: MediaQuery.of(context).size.width / 2 + 
-                    distance * math.cos(angle + animationOffset),
-              top: MediaQuery.of(context).size.height / 2 + 
-                   distance * math.sin(angle + animationOffset),
+              left: MediaQuery.of(context).size.width / 2 +
+                  distance * math.cos(angle + animationOffset),
+              top: MediaQuery.of(context).size.height / 2 +
+                  distance * math.sin(angle + animationOffset),
               child: Container(
                 width: 4 + (index % 3) * 2,
                 height: 4 + (index % 3) * 2,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withOpacitySafe(0.3),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -235,15 +237,15 @@ class _SplashScreenState extends State<SplashScreen>
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withOpacitySafe(0.2),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withOpacitySafe(0.3),
                   width: 3,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacitySafe(0.2),
                     blurRadius: 30,
                     spreadRadius: 10,
                   ),
@@ -284,7 +286,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Text(
                   'Empowering farmers through digital innovation',
                   style: AppTextStyles.bodyLarge.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withOpacitySafe(0.9),
                     fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
@@ -294,7 +296,7 @@ class _SplashScreenState extends State<SplashScreen>
                   width: 60,
                   height: 3,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withOpacitySafe(0.8),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -312,7 +314,7 @@ class _SplashScreenState extends State<SplashScreen>
       height: 50,
       child: CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(
-          Colors.white.withOpacity(0.8),
+          Colors.white.withOpacitySafe(0.8),
         ),
         strokeWidth: 3,
       ),
@@ -331,14 +333,14 @@ class _SplashScreenState extends State<SplashScreen>
             children: [
               Icon(
                 Icons.verified,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withOpacitySafe(0.7),
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 'Trusted by farmers across India',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withOpacitySafe(0.7),
                 ),
               ),
             ],
@@ -347,7 +349,7 @@ class _SplashScreenState extends State<SplashScreen>
           Text(
             'Version 1.0.0',
             style: AppTextStyles.bodySmall.copyWith(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withOpacitySafe(0.6),
             ),
           ),
         ],

@@ -14,6 +14,7 @@ import '../utils/app_localization.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
+import '../utils/deprecation_fixes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -315,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen>
                   width: 20 + (index % 3) * 10,
                   height: 20 + (index % 3) * 10,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withOpacitySafe(0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -335,15 +336,15 @@ class _LoginScreenState extends State<LoginScreen>
           width: 120,
           height: 120,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withOpacitySafe(0.1),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withOpacitySafe(0.3),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withOpacitySafe(0.2),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -376,7 +377,7 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           context.t('welcomeMessage'),
           style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withOpacitySafe(0.9),
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: const Duration(milliseconds: 500)),
@@ -394,12 +395,12 @@ class _LoginScreenState extends State<LoginScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+            Colors.white.withOpacitySafe(0.1),
+            Colors.white.withOpacitySafe(0.05),
           ],
         ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withOpacitySafe(0.2),
           width: 2,
         ),
       ),
@@ -467,7 +468,7 @@ class _LoginScreenState extends State<LoginScreen>
                     Text(
                       'Didn\'t receive OTP?',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withOpacitySafe(0.7),
                       ),
                     ),
                     TextButton(
@@ -478,7 +479,7 @@ class _LoginScreenState extends State<LoginScreen>
                             : 'Resend OTP',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: _resendCountdown > 0
-                              ? Colors.white.withOpacity(0.5)
+                              ? Colors.white.withOpacitySafe(0.5)
                               : Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -509,7 +510,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Text(
                     context.t('skip'),
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withOpacitySafe(0.8),
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -534,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen>
             Expanded(
               child: Container(
                 height: 1,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withOpacitySafe(0.3),
               ),
             ),
             Padding(
@@ -542,14 +543,14 @@ class _LoginScreenState extends State<LoginScreen>
               child: Text(
                 'Or continue with',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withOpacitySafe(0.8),
                 ),
               ),
             ),
             Expanded(
               child: Container(
                 height: 1,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withOpacitySafe(0.3),
               ),
             ),
           ],
@@ -589,10 +590,10 @@ class _LoginScreenState extends State<LoginScreen>
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withOpacitySafe(0.1),
           borderRadius: BorderRadius.circular(AppBorderRadius.md),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withOpacitySafe(0.2),
             width: 1,
           ),
         ),
@@ -626,12 +627,12 @@ class _LoginScreenState extends State<LoginScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+            Colors.white.withOpacitySafe(0.1),
+            Colors.white.withOpacitySafe(0.05),
           ],
         ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withOpacitySafe(0.2),
           width: 2,
         ),
       ),
@@ -682,10 +683,10 @@ class _LoginScreenState extends State<LoginScreen>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withOpacitySafe(0.1),
             borderRadius: BorderRadius.circular(AppBorderRadius.md),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withOpacitySafe(0.2),
               width: 1,
             ),
           ),
