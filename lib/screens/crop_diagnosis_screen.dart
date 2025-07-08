@@ -6,6 +6,7 @@ import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
 import '../utils/mock_data.dart';
 import '../models/crop_diagnosis.dart';
+import '../services/crop_diagnosis_service.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/common_widgets.dart';
@@ -19,6 +20,7 @@ class CropDiagnosisScreen extends StatefulWidget {
 
 class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
   final ImagePicker _picker = ImagePicker();
+  final CropDiagnosisService _diagnosisService = CropDiagnosisService();
   File? _selectedImage;
   CropDiagnosis? _diagnosis;
   bool _isLoading = false;
@@ -30,10 +32,18 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
     _loadDiagnosisHistory();
   }
 
-  void _loadDiagnosisHistory() {
-    setState(() {
-      _diagnosisHistory = MockData.getDiagnosisHistory();
-    });
+  void _loadDiagnosisHistory() async {
+    try {
+      final history = await _diagnosisService.getUserDiagnoses();
+      setState(() {
+        _diagnosisHistory = history;
+      });
+    } catch (e) {
+      // Fall back to mock data if service fails
+      setState(() {
+        _diagnosisHistory = MockData.getDiagnosisHistory();
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -44,7 +54,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
         maxWidth: 800,
         maxHeight: 600,
       );
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
@@ -72,30 +82,37 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 3));
-      
+
       // Mock diagnosis result
       final mockDiagnosis = CropDiagnosis(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        imagePath: _selectedImage!.path,
+        userId: 'current_user_id', // This would be replaced with actual user ID
         cropType: 'Tomato',
-        status: DiagnosisStatus.success,
-        diseaseName: 'Late Blight',
-        diseaseDescription: 'A fungal disease that affects tomato leaves and fruits, causing brown spots and wilting.',
-        confidence: 0.87,
-        treatments: [
-          'Remove affected leaves immediately',
-          'Apply copper-based fungicide',
-          'Improve air circulation around plants',
-          'Reduce watering frequency',
-        ],
-        preventionMeasures: [
-          'Plant disease-resistant varieties',
-          'Ensure proper spacing between plants',
-          'Avoid overhead watering',
-          'Apply preventive fungicide spray',
-        ],
-        diagnosisDate: DateTime.now(),
-        severity: 'Moderate',
+        description: 'Tomato plant showing spots on leaves',
+        imageUrl: _selectedImage!.path,
+        location: 'Current Location',
+        status: DiagnosisStatus.completed,
+        submittedAt: DateTime.now(),
+        completedAt: DateTime.now(),
+        diagnosisResult: DiagnosisResult(
+          disease: 'Late Blight',
+          confidence: 0.87,
+          description:
+              'A fungal disease that affects tomato leaves and fruits, causing brown spots and wilting.',
+          treatment: [
+            'Remove affected leaves immediately',
+            'Apply copper-based fungicide',
+            'Improve air circulation around plants',
+            'Reduce watering frequency',
+          ],
+          prevention: [
+            'Plant disease-resistant varieties',
+            'Ensure proper spacing between plants',
+            'Avoid overhead watering',
+            'Apply preventive fungicide spray',
+          ],
+          severity: DiseaseSeverity.moderate,
+        ),
       );
 
       setState(() {
@@ -139,7 +156,6 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              
               Text(
                 'Select Image Source',
                 style: AppTextStyles.h3.copyWith(
@@ -147,7 +163,6 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              
               Row(
                 children: [
                   Expanded(
@@ -173,7 +188,6 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   ),
                 ],
               ),
-              
               const SizedBox(height: AppSpacing.lg),
             ],
           ),
@@ -255,7 +269,8 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                         height: 200,
                         decoration: BoxDecoration(
                           color: AppColors.borderLight,
-                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                          borderRadius:
+                              BorderRadius.circular(AppBorderRadius.md),
                           border: Border.all(
                             color: AppColors.borderMedium,
                             style: BorderStyle.solid,
@@ -279,18 +294,15 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                           ],
                         ),
                       ),
-                    
                     const SizedBox(height: AppSpacing.md),
-                    
                     CustomButton(
-                      text: _selectedImage == null 
-                          ? 'Select Image' 
+                      text: _selectedImage == null
+                          ? 'Select Image'
                           : 'Change Image',
                       onPressed: _showImageSourceDialog,
                       icon: Icons.photo_camera,
                       isOutlined: _selectedImage != null,
                     ),
-                    
                     if (_selectedImage != null && !_isLoading) ...[
                       const SizedBox(height: AppSpacing.md),
                       CustomButton(
@@ -303,7 +315,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 ),
               ),
             ),
-            
+
             // Loading state
             if (_isLoading)
               const Padding(
@@ -312,14 +324,14 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   message: 'Analyzing your crop image...',
                 ),
               ),
-            
+
             // Diagnosis result
             if (_diagnosis != null)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: _buildDiagnosisResult(_diagnosis!),
               ),
-            
+
             // Diagnosis history
             if (_diagnosisHistory.isNotEmpty) ...[
               Padding(
@@ -342,16 +354,14 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   ],
                 ),
               ),
-              
               ...(_diagnosisHistory.take(3).map((diagnosis) => Container(
-                margin: const EdgeInsets.only(
-                  left: AppSpacing.lg,
-                  right: AppSpacing.lg,
-                  bottom: AppSpacing.md,
-                ),
-                child: _buildDiagnosisHistoryItem(diagnosis),
-              ))),
-              
+                    margin: const EdgeInsets.only(
+                      left: AppSpacing.lg,
+                      right: AppSpacing.lg,
+                      bottom: AppSpacing.md,
+                    ),
+                    child: _buildDiagnosisHistoryItem(diagnosis),
+                  ))),
               if (_diagnosisHistory.length > 3)
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
@@ -368,7 +378,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   ),
                 ),
             ],
-            
+
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
@@ -388,14 +398,15 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: diagnosis.isHealthy 
+                  color: diagnosis.isHealthy
                       ? AppColors.success.withOpacity(0.1)
                       : AppColors.error.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   diagnosis.isHealthy ? Icons.eco : Icons.warning,
-                  color: diagnosis.isHealthy ? AppColors.success : AppColors.error,
+                  color:
+                      diagnosis.isHealthy ? AppColors.success : AppColors.error,
                   size: 24,
                 ),
               ),
@@ -405,16 +416,16 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      diagnosis.isHealthy 
+                      diagnosis.isHealthy
                           ? context.t('healthyPlant')
                           : context.t('diseaseDetected'),
                       style: AppTextStyles.h4.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    if (diagnosis.diseaseName != null)
+                    if (diagnosis.hasDiagnosis)
                       Text(
-                        diagnosis.diseaseName!,
+                        diagnosis.diagnosisResult!.disease,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -422,7 +433,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   ],
                 ),
               ),
-              if (diagnosis.confidence != null)
+              if (diagnosis.hasDiagnosis)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
@@ -433,7 +444,7 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                     borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                   ),
                   child: Text(
-                    '${(diagnosis.confidence! * 100).toInt()}%',
+                    '${(diagnosis.diagnosisResult!.confidence * 100).toInt()}%',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -442,18 +453,19 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                 ),
             ],
           ),
-          
-          if (diagnosis.diseaseDescription != null) ...[
+
+          if (diagnosis.hasDiagnosis) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
-              diagnosis.diseaseDescription!,
+              diagnosis.diagnosisResult!.description,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
           ],
-          
-          if (diagnosis.treatments.isNotEmpty) ...[
+
+          if (diagnosis.hasDiagnosis &&
+              diagnosis.diagnosisResult!.treatment.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.t('treatment'),
@@ -462,31 +474,32 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            ...diagnosis.treatments.map((treatment) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      treatment,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+            ...diagnosis.diagnosisResult!.treatment.map((treatment) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: AppColors.primary,
                       ),
-                    ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          treatment,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )),
+                )),
           ],
-          
-          if (diagnosis.preventionMeasures.isNotEmpty) ...[
+
+          if (diagnosis.hasDiagnosis &&
+              diagnosis.diagnosisResult!.prevention.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.t('prevention'),
@@ -495,28 +508,29 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            ...diagnosis.preventionMeasures.map((prevention) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: AppColors.success,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      prevention,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+            ...diagnosis.diagnosisResult!.prevention
+                .map((prevention) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: AppColors.success,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              prevention,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
+                    )),
           ],
         ],
       ),
@@ -553,15 +567,17 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
                   ),
                 ),
                 Text(
-                  diagnosis.isHealthy 
+                  diagnosis.isHealthy
                       ? context.t('healthyPlant')
-                      : diagnosis.diseaseName ?? context.t('diseaseDetected'),
+                      : diagnosis.hasDiagnosis
+                          ? diagnosis.diagnosisResult!.disease
+                          : context.t('diseaseDetected'),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 Text(
-                  '${diagnosis.diagnosisDate.day}/${diagnosis.diagnosisDate.month}/${diagnosis.diagnosisDate.year}',
+                  '${diagnosis.submittedAt.day}/${diagnosis.submittedAt.month}/${diagnosis.submittedAt.year}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textLight,
                   ),
@@ -569,9 +585,9 @@ class _CropDiagnosisScreenState extends State<CropDiagnosisScreen> {
               ],
             ),
           ),
-          if (diagnosis.confidence != null)
+          if (diagnosis.hasDiagnosis)
             Text(
-              '${(diagnosis.confidence! * 100).toInt()}%',
+              '${(diagnosis.diagnosisResult!.confidence * 100).toInt()}%',
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,

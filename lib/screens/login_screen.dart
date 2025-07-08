@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import '../providers/app_state_provider.dart';
+import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_theme.dart';
 import '../utils/app_localization.dart';
@@ -27,10 +29,12 @@ class _LoginScreenState extends State<LoginScreen>
   final _otpController = TextEditingController();
   late AnimationController _backgroundController;
   late AnimationController _formController;
+  final AuthService _authService = AuthService();
 
   bool _isLoading = false;
   bool _showOTPField = false;
   int _resendCountdown = 0;
+  String? _verificationId;
 
   @override
   void initState() {
@@ -89,21 +93,43 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      final phoneNumber = '+91${_phoneController.text}';
 
-      setState(() {
-        _showOTPField = true;
-        _resendCountdown = 60;
-      });
+      await _authService.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (credential) async {
+          // Auto-verification completed
+          await _authService.signInWithCredential(credential);
+          _navigateToHome();
+        },
+        verificationFailed: (exception) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Verification failed: ${exception.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        codeSent: (verificationId, resendToken) {
+          _verificationId = verificationId;
+          setState(() {
+            _showOTPField = true;
+            _resendCountdown = 60;
+          });
+          _startResendTimer();
 
-      _startResendTimer();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP sent to +91${_phoneController.text}'),
-          backgroundColor: AppColors.success,
-        ),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('OTP sent to $phoneNumber'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (verificationId) {
+          _verificationId = verificationId;
+        },
       );
     } catch (e) {
       if (mounted) {
@@ -142,29 +168,21 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
+      if (_verificationId == null) {
+        throw Exception('Please request OTP first');
+      }
+
+      final credential = firebase_auth.PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: _otpController.text,
+      );
+
+      await _authService.signInWithCredential(credential);
       await context
           .read<AppStateProvider>()
           .login('+91${_phoneController.text}');
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const HomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: animation.drive(
-                  Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
-                ),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
-        );
-      }
+      _navigateToHome();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -180,6 +198,27 @@ class _LoginScreenState extends State<LoginScreen>
           _isLoading = false;
         });
       }
+    }
+  }
+
+  void _navigateToHome() {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
+              ),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+      );
     }
   }
 

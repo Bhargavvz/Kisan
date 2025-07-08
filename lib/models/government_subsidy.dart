@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class GovernmentSubsidy {
   final String id;
   final String schemeName;
@@ -47,6 +49,24 @@ class GovernmentSubsidy {
     );
   }
 
+  factory GovernmentSubsidy.fromFirestore(Map<String, dynamic> json) {
+    return GovernmentSubsidy(
+      id: json['id'] ?? '',
+      schemeName: json['schemeName'] ?? '',
+      description: json['description'] ?? '',
+      category: json['category'] ?? '',
+      maxAmount: (json['maxAmount'] ?? 0.0).toDouble(),
+      eligibilityCriteria: List<String>.from(json['eligibilityCriteria'] ?? []),
+      requiredDocuments: List<String>.from(json['requiredDocuments'] ?? []),
+      applicationProcess: json['applicationProcess'] ?? '',
+      deadline: json['deadline']?.toDate() ?? DateTime.now(),
+      department: json['department'] ?? '',
+      contactNumber: json['contactNumber'],
+      website: json['website'],
+      isActive: json['isActive'] ?? true,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -58,6 +78,24 @@ class GovernmentSubsidy {
       'requiredDocuments': requiredDocuments,
       'applicationProcess': applicationProcess,
       'deadline': deadline.toIso8601String(),
+      'department': department,
+      'contactNumber': contactNumber,
+      'website': website,
+      'isActive': isActive,
+    };
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'schemeName': schemeName,
+      'description': description,
+      'category': category,
+      'maxAmount': maxAmount,
+      'eligibilityCriteria': eligibilityCriteria,
+      'requiredDocuments': requiredDocuments,
+      'applicationProcess': applicationProcess,
+      'deadline': Timestamp.fromDate(deadline),
       'department': department,
       'contactNumber': contactNumber,
       'website': website,

@@ -8,11 +8,15 @@ import 'providers/localization_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/language_selection_screen.dart';
+import 'services/firebase_service.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await FirebaseService().initialize();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
