@@ -1,0 +1,462 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
+import '../utils/mock_data.dart';
+import '../widgets/custom_card.dart';
+import '../widgets/common_widgets.dart';
+import 'crop_diagnosis_screen.dart';
+import 'market_prices_screen.dart';
+import 'subsidies_screen.dart';
+import 'profile_screen.dart';
+import 'help_screen.dart';
+import 'settings_screen.dart';
+import 'offline_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  final PageController _pageController = PageController();
+
+  final List<BottomNavigationBarItem> _bottomNavItems = [
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: 'Home',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.camera_alt),
+      label: 'Diagnose',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.trending_up),
+      label: 'Prices',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.account_balance),
+      label: 'Subsidies',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: 'Profile',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: AppConstants.animationDuration,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        if (appState.isOffline) {
+          return const OfflineScreen();
+        }
+
+        return Scaffold(
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            children: [
+              _buildDashboard(),
+              const CropDiagnosisScreen(),
+              const MarketPricesScreen(),
+              const SubsidiesScreen(),
+              const ProfileScreen(),
+            ],
+          ),
+          bottomNavigationBar: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textLight,
+              selectedLabelStyle: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: AppTextStyles.caption,
+              items: _bottomNavItems,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDashboard() {
+    final stats = MockData.getDashboardStats();
+    
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(
+          context.t('dashboard'),
+          style: AppTextStyles.h3.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.help),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HelpScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Simulate refresh
+          await Future.delayed(const Duration(seconds: 1));
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Header section
+              Container(
+                color: AppColors.primary,
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: const BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppBorderRadius.xl),
+                      topRight: Radius.circular(AppBorderRadius.xl),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Welcome message
+                      Consumer<AppStateProvider>(
+                        builder: (context, appState, child) {
+                          final user = appState.currentUser;
+                          return Text(
+                            user != null 
+                                ? 'Welcome back, ${user.name.split(' ').first}!'
+                                : context.t('welcome'),
+                            style: AppTextStyles.h2.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Here\'s your farming dashboard',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      
+                      // Stats grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: AppSpacing.md,
+                        mainAxisSpacing: AppSpacing.md,
+                        childAspectRatio: 1.2,
+                        children: [
+                          InfoCard(
+                            title: 'Total Diagnoses',
+                            value: '${stats['totalDiagnoses']}',
+                            icon: Icons.camera_alt,
+                            iconColor: AppColors.primary,
+                            onTap: () => _onItemTapped(1),
+                          ),
+                          InfoCard(
+                            title: 'Market Updates',
+                            value: '${stats['marketUpdates']}',
+                            icon: Icons.trending_up,
+                            iconColor: AppColors.accent,
+                            onTap: () => _onItemTapped(2),
+                          ),
+                          InfoCard(
+                            title: 'Healthy Plants',
+                            value: '${stats['healthyPlants']}',
+                            icon: Icons.eco,
+                            iconColor: AppColors.success,
+                          ),
+                          InfoCard(
+                            title: 'Subsidies Applied',
+                            value: '${stats['subsidiesApplied']}',
+                            icon: Icons.account_balance,
+                            iconColor: AppColors.info,
+                            onTap: () => _onItemTapped(3),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Quick actions
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Actions',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: context.t('cropDiagnosis'),
+                            icon: Icons.camera_alt,
+                            color: AppColors.primary,
+                            onTap: () => _onItemTapped(1),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: context.t('marketPrices'),
+                            icon: Icons.trending_up,
+                            color: AppColors.accent,
+                            onTap: () => _onItemTapped(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: context.t('subsidies'),
+                            icon: Icons.account_balance,
+                            color: AppColors.info,
+                            onTap: () => _onItemTapped(3),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: context.t('help'),
+                            icon: Icons.help,
+                            color: AppColors.success,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HelpScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Recent activity
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Activity',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    CustomCard(
+                      child: Column(
+                        children: [
+                          _buildRecentActivityItem(
+                            'Tomato diagnosis completed',
+                            'Disease detected: Late Blight',
+                            Icons.camera_alt,
+                            AppColors.primary,
+                            '2 hours ago',
+                          ),
+                          const Divider(),
+                          _buildRecentActivityItem(
+                            'Market prices updated',
+                            'Rice price increased by 5%',
+                            Icons.trending_up,
+                            AppColors.accent,
+                            '4 hours ago',
+                          ),
+                          const Divider(),
+                          _buildRecentActivityItem(
+                            'New subsidy scheme available',
+                            'PM-KISAN scheme deadline extended',
+                            Icons.account_balance,
+                            AppColors.info,
+                            '1 day ago',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return CustomCard(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            title,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityItem(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    String time,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textLight,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

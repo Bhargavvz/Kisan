@@ -1,0 +1,346 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/app_state_provider.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
+import 'language_selection_screen.dart';
+import 'onboarding_screen.dart';
+import 'home_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _logoAnimation;
+  late Animation<double> _textAnimation;
+  late Animation<double> _backgroundAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAnimations();
+    _initializeApp();
+  }
+
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _backgroundAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+    ));
+
+    _logoAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.2, 0.7, curve: Curves.elasticOut),
+    ));
+
+    _textAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
+    ));
+
+    _animationController.forward();
+  }
+
+  void _initializeApp() async {
+    // Initialize shared preferences and check first launch
+    final prefs = await SharedPreferences.getInstance();
+    final appState = context.read<AppStateProvider>();
+    final localizationProvider = context.read<LocalizationProvider>();
+    
+    // Wait for animations to complete
+    await Future.delayed(const Duration(seconds: 3));
+    
+    if (mounted) {
+      // Check if language has been selected before
+      final hasSelectedLanguage = prefs.getBool('hasSelectedLanguage') ?? false;
+      
+      if (!hasSelectedLanguage) {
+        // First time - show language selection
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LanguageSelectionScreen(),
+          ),
+        );
+      } else if (appState.isFirstLaunch) {
+        // Language selected but first launch - show onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      } else {
+        // Regular app launch - go to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: AnimatedBuilder(
+        animation: _backgroundAnimation,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, _backgroundAnimation.value, 1.0],
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withOpacity(0.8),
+                  const Color(0xFF1B5E20),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Top decorative elements
+                  Expanded(
+                    flex: 1,
+                    child: AnimatedBuilder(
+                      animation: _textAnimation,
+                      builder: (context, child) {
+                        return Container(
+                          padding: const EdgeInsets.only(top: 50),
+                          child: Opacity(
+                            opacity: _textAnimation.value,
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildFloatingIcon(Icons.agriculture, 0.5),
+                                    _buildFloatingIcon(Icons.eco, 1.0),
+                                    _buildFloatingIcon(Icons.grass, 0.7),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildFloatingIcon(Icons.spa, 0.8),
+                                    _buildFloatingIcon(Icons.local_florist, 0.3),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  
+                  // Main content
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Logo Animation
+                          AnimatedBuilder(
+                            animation: _logoAnimation,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: _logoAnimation.value,
+                                child: Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.agriculture,
+                                    size: 70,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          
+                          const SizedBox(height: AppSpacing.xxl),
+                          
+                          // App Title Animation
+                          AnimatedBuilder(
+                            animation: _textAnimation,
+                            builder: (context, child) {
+                              return Opacity(
+                                opacity: _textAnimation.value,
+                                child: Transform.translateY(
+                                  offset: (1 - _textAnimation.value) * 30,
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Project Kisan',
+                                        style: AppTextStyles.h1.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 32,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpacing.lg,
+                                        ),
+                                        child: Text(
+                                          'Digital Farming Revolution',
+                                          style: AppTextStyles.bodyLarge.copyWith(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Bottom section
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Loading Indicator
+                        AnimatedBuilder(
+                          animation: _textAnimation,
+                          builder: (context, child) {
+                            return Opacity(
+                              opacity: _textAnimation.value,
+                              child: Column(
+                                children: [
+                                  const SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  Text(
+                                    'Loading...',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        
+                        const SizedBox(height: AppSpacing.xxl),
+                        
+                        // Version info
+                        AnimatedBuilder(
+                          animation: _textAnimation,
+                          builder: (context, child) {
+                            return Opacity(
+                              opacity: _textAnimation.value * 0.6,
+                              child: Text(
+                                'Version 1.0.0',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFloatingIcon(IconData icon, double delay) {
+    return AnimatedBuilder(
+      animation: _textAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(
+            0,
+            -10 * _textAnimation.value * delay,
+          ),
+          child: Opacity(
+            opacity: _textAnimation.value * 0.3,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white.withOpacity(0.3),
+                size: 20,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

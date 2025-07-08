@@ -1,0 +1,270 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
+import 'home_screen.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return context.t('enterPhoneNumber');
+    }
+    if (value.length != 10) {
+      return 'Please enter a valid 10-digit phone number';
+    }
+    return null;
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await context.read<AppStateProvider>().login('+91${_phoneController.text}');
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _skip() {
+    context.read<AppStateProvider>().skipLogin();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: AppSpacing.xxl),
+                
+                // Logo and welcome message
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.agriculture,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                
+                Text(
+                  context.t('welcome'),
+                  style: AppTextStyles.h1.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                
+                Text(
+                  context.t('welcomeMessage'),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const SizedBox(height: AppSpacing.xxl),
+                
+                // Login form
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomTextField(
+                        labelText: context.t('phoneNumber'),
+                        hintText: context.t('enterPhoneNumber'),
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        prefixText: '+91 ',
+                        validator: _validatePhoneNumber,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
+                        prefixIcon: const Icon(
+                          Icons.phone,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      
+                      CustomButton(
+                        text: context.t('login'),
+                        onPressed: _login,
+                        isLoading: _isLoading,
+                        icon: Icons.login,
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.md),
+                      
+                      // Skip button
+                      Center(
+                        child: TextButton(
+                          onPressed: _skip,
+                          child: Text(
+                            context.t('skip'),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: AppSpacing.xxl),
+                
+                // Features preview
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                    boxShadow: const [AppShadows.light],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'What you can do with Project Kisan',
+                        style: AppTextStyles.h4.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      
+                      _buildFeatureItem(
+                        Icons.camera_alt,
+                        'Crop Disease Diagnosis',
+                        'Get instant diagnosis of plant diseases',
+                      ),
+                      _buildFeatureItem(
+                        Icons.trending_up,
+                        'Market Prices',
+                        'Check real-time market prices',
+                      ),
+                      _buildFeatureItem(
+                        Icons.account_balance,
+                        'Government Subsidies',
+                        'Access government schemes and subsidies',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

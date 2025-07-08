@@ -1,0 +1,276 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state_provider.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
+import '../widgets/custom_button.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  final List<OnboardingPage> _pages = [
+    OnboardingPage(
+      title: 'onboardingTitle1',
+      description: 'onboardingDesc1',
+      icon: Icons.camera_alt,
+      color: AppColors.primary,
+    ),
+    OnboardingPage(
+      title: 'onboardingTitle2',
+      description: 'onboardingDesc2',
+      icon: Icons.trending_up,
+      color: AppColors.accent,
+    ),
+    OnboardingPage(
+      title: 'onboardingTitle3',
+      description: 'onboardingDesc3',
+      icon: Icons.account_balance,
+      color: AppColors.success,
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentPage < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: AppConstants.animationDuration,
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _navigateToLogin();
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: AppConstants.animationDuration,
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _navigateToLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  void _skip() {
+    context.read<AppStateProvider>().skipLogin();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with Skip button
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Logo
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.agriculture,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        context.t('appTitle'),
+                        style: AppTextStyles.h4.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Skip button
+                  TextButton(
+                    onPressed: _skip,
+                    child: Text(
+                      context.t('skip'),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Page content
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: _pages.length,
+                itemBuilder: (context, index) {
+                  return _buildOnboardingPage(_pages[index]);
+                },
+              ),
+            ),
+            
+            // Bottom navigation
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  // Page indicators
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _pages.length,
+                      (index) => _buildPageIndicator(index),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  
+                  // Navigation buttons
+                  Row(
+                    children: [
+                      // Back button
+                      if (_currentPage > 0)
+                        Expanded(
+                          child: CustomButton(
+                            text: context.t('back'),
+                            onPressed: _previousPage,
+                            isOutlined: true,
+                          ),
+                        ),
+                      if (_currentPage > 0) const SizedBox(width: AppSpacing.md),
+                      
+                      // Next/Get Started button
+                      Expanded(
+                        child: CustomButton(
+                          text: _currentPage == _pages.length - 1
+                              ? context.t('getStarted')
+                              : context.t('next'),
+                          onPressed: _nextPage,
+                          icon: _currentPage == _pages.length - 1
+                              ? Icons.arrow_forward
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOnboardingPage(OnboardingPage page) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              color: page.color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              page.icon,
+              size: 80,
+              color: page.color,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          
+          // Title
+          Text(
+            context.t(page.title),
+            style: AppTextStyles.h2.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          
+          // Description
+          Text(
+            context.t(page.description),
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageIndicator(int index) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      width: _currentPage == index ? 24 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: _currentPage == index
+            ? AppColors.primary
+            : AppColors.borderLight,
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
+}
+
+class OnboardingPage {
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color color;
+
+  OnboardingPage({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.color,
+  });
+}

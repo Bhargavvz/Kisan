@@ -1,0 +1,499 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import '../providers/localization_provider.dart';
+import '../providers/app_state_provider.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
+import 'onboarding_screen.dart';
+import 'home_screen.dart';
+
+class LanguageSelectionScreen extends StatefulWidget {
+  final bool isFromSettings;
+  
+  const LanguageSelectionScreen({
+    super.key,
+    this.isFromSettings = false,
+  });
+
+  @override
+  State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
+}
+
+class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  
+  String? _selectedLanguage;
+  bool _isLoading = false;
+
+  final List<LanguageModel> _languages = [
+    LanguageModel(
+      code: 'en',
+      name: 'English',
+      nativeName: 'English',
+      flag: '🇺🇸',
+      icon: FontAwesomeIcons.globe,
+    ),
+    LanguageModel(
+      code: 'hi',
+      name: 'Hindi',
+      nativeName: 'हिंदी',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.om,
+    ),
+    LanguageModel(
+      code: 'kn',
+      name: 'Kannada',
+      nativeName: 'ಕನ್ನಡ',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.pagelines,
+    ),
+    LanguageModel(
+      code: 'bn',
+      name: 'Bengali',
+      nativeName: 'বাংলা',
+      flag: '🇧🇩',
+      icon: FontAwesomeIcons.fish,
+    ),
+    LanguageModel(
+      code: 'mr',
+      name: 'Marathi',
+      nativeName: 'मराठी',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.mountain,
+    ),
+    LanguageModel(
+      code: 'ta',
+      name: 'Tamil',
+      nativeName: 'தமிழ்',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.temple,
+    ),
+    LanguageModel(
+      code: 'te',
+      name: 'Telugu',
+      nativeName: 'తెలుగు',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.star,
+    ),
+    LanguageModel(
+      code: 'gu',
+      name: 'Gujarati',
+      nativeName: 'ગુજરાતી',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.coins,
+    ),
+    LanguageModel(
+      code: 'pa',
+      name: 'Punjabi',
+      nativeName: 'ਪੰਜਾਬੀ',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.wheatAwn,
+    ),
+    LanguageModel(
+      code: 'ml',
+      name: 'Malayalam',
+      nativeName: 'മലയാളം',
+      flag: '🇮🇳',
+      icon: FontAwesomeIcons.coconut,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAnimations();
+    _selectedLanguage = context.read<LocalizationProvider>().locale.languageCode;
+  }
+
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _onLanguageSelected(String languageCode) {
+    setState(() {
+      _selectedLanguage = languageCode;
+    });
+    
+    HapticFeedback.lightImpact();
+  }
+
+  void _onContinuePressed() async {
+    if (_selectedLanguage == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    HapticFeedback.mediumImpact();
+
+    final localizationProvider = context.read<LocalizationProvider>();
+    await localizationProvider.setLocale(Locale(_selectedLanguage!));
+
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    if (mounted) {
+      if (widget.isFromSettings) {
+        Navigator.pop(context);
+      } else {
+        final appState = context.read<AppStateProvider>();
+        
+        if (appState.isFirstLaunch) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.background,
+                Color(0xFFE8F5E8),
+              ],
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header
+              _buildHeader(),
+              
+              // Language List
+              Expanded(
+                child: _buildLanguageList(),
+              ),
+              
+              // Continue Button
+              _buildContinueButton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              // App Logo
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary,
+                      blurRadius: 20,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.agriculture,
+                  size: 40,
+                  color: Colors.white,
+                ),
+              ),
+              
+              const SizedBox(height: AppSpacing.lg),
+              
+              // Title
+              Text(
+                widget.isFromSettings ? 'Select Language' : 'Choose Your Language',
+                style: AppTextStyles.h2.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: AppSpacing.sm),
+              
+              // Subtitle
+              Text(
+                widget.isFromSettings 
+                  ? 'Change your preferred language'
+                  : 'Select your preferred language to get started',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageList() {
+    return AnimationLimiter(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        itemCount: _languages.length,
+        itemBuilder: (context, index) {
+          final language = _languages[index];
+          final isSelected = _selectedLanguage == language.code;
+          
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 600),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Material(
+                    elevation: isSelected ? 8 : 2,
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                    color: isSelected ? AppColors.primary : Colors.white,
+                    shadowColor: isSelected 
+                      ? AppColors.primary.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.1),
+                    child: InkWell(
+                      onTap: () => _onLanguageSelected(language.code),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Row(
+                          children: [
+                            // Flag/Icon
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                  ? Colors.white.withOpacity(0.2)
+                                  : AppColors.background,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  language.flag,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                              ),
+                            ),
+                            
+                            const SizedBox(width: AppSpacing.md),
+                            
+                            // Language Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    language.name,
+                                    style: AppTextStyles.h4.copyWith(
+                                      color: isSelected 
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    language.nativeName,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: isSelected 
+                                        ? Colors.white.withOpacity(0.8)
+                                        : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            // Selection Indicator
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isSelected 
+                                  ? Colors.white
+                                  : Colors.transparent,
+                                border: Border.all(
+                                  color: isSelected 
+                                    ? Colors.white
+                                    : AppColors.borderMedium,
+                                  width: 2,
+                                ),
+                              ),
+                              child: isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  )
+                                : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            // Continue Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _selectedLanguage != null && !_isLoading
+                  ? _onContinuePressed
+                  : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shadowColor: AppColors.primary.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                  ),
+                ),
+                child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.isFromSettings ? 'Save' : 'Continue',
+                          style: AppTextStyles.button,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Icon(Icons.arrow_forward_rounded),
+                      ],
+                    ),
+              ),
+            ),
+            
+            if (!widget.isFromSettings) ...[
+              const SizedBox(height: AppSpacing.md),
+              
+              // Skip Button
+              TextButton(
+                onPressed: _isLoading ? null : () {
+                  final appState = context.read<AppStateProvider>();
+                  
+                  if (appState.isFirstLaunch) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+                    );
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    );
+                  }
+                },
+                child: Text(
+                  'Skip for now',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LanguageModel {
+  final String code;
+  final String name;
+  final String nativeName;
+  final String flag;
+  final IconData icon;
+
+  LanguageModel({
+    required this.code,
+    required this.name,
+    required this.nativeName,
+    required this.flag,
+    required this.icon,
+  });
+}
